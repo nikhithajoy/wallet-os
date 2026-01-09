@@ -49,6 +49,7 @@ const ExpenseTracker = () => {
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState([]);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showAddIncome, setShowAddIncome] = useState(false);
   const [showChatbot, setShowChatbot] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -58,6 +59,12 @@ const ExpenseTracker = () => {
     item: '',
     amount: '',
     category: 'Food'
+  });
+
+  const [newIncome, setNewIncome] = useState({
+    date: new Date().toISOString().split('T')[0],
+    source: '',
+    amount: ''
   });
 
   const categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
@@ -247,6 +254,46 @@ const ExpenseTracker = () => {
         category: 'Food'
       });
       setShowAddExpense(false);
+    }
+  };
+
+  const addIncome = async () => {
+    if (newIncome.source && newIncome.amount) {
+      const incomeData = {
+        date: newIncome.date,
+        source: newIncome.source,
+        amount: parseFloat(newIncome.amount)
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/income`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(incomeData),
+        });
+
+        if (response.ok) {
+          const savedIncome = await response.json();
+          // Update income total
+          setIncome(prev => prev + parseFloat(newIncome.amount));
+          // Update user in localStorage
+          const savedUser = JSON.parse(localStorage.getItem('user'));
+          savedUser.income = (savedUser.income || 0) + parseFloat(newIncome.amount);
+          localStorage.setItem('user', JSON.stringify(savedUser));
+        }
+      } catch (error) {
+        console.error('Failed to save income:', error);
+      }
+
+      setNewIncome({
+        date: new Date().toISOString().split('T')[0],
+        source: '',
+        amount: ''
+      });
+      setShowAddIncome(false);
     }
   };
 
@@ -640,14 +687,23 @@ const ExpenseTracker = () => {
               </div>
             </div>
 
-            {/* Add Expense Button */}
-            <button
-              onClick={() => setShowAddExpense(true)}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-4 rounded-2xl flex items-center justify-center gap-2 font-semibold transition shadow-lg"
-            >
-              <PlusCircle size={20} />
-              Add New Expense
-            </button>
+            {/* Add Expense & Income Buttons */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <button
+                onClick={() => setShowAddExpense(true)}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-4 rounded-2xl flex items-center justify-center gap-2 font-semibold transition shadow-lg"
+              >
+                <PlusCircle size={20} />
+                Add New Expense
+              </button>
+              <button
+                onClick={() => setShowAddIncome(true)}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-4 rounded-2xl flex items-center justify-center gap-2 font-semibold transition shadow-lg"
+              >
+                <PlusCircle size={20} />
+                Add New Income
+              </button>
+            </div>
 
             {/* Expense List */}
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
@@ -984,6 +1040,57 @@ const ExpenseTracker = () => {
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg font-semibold transition"
               >
                 Add Expense
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Income Modal */}
+      {showAddIncome && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-white/10">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-green-400">Add Income</h3>
+              <button onClick={() => setShowAddIncome(false)} className="text-white/60 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-white/60 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={newIncome.date}
+                  onChange={(e) => setNewIncome({ ...newIncome, date: e.target.value })}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-white/60 mb-2">Source</label>
+                <input
+                  type="text"
+                  value={newIncome.source}
+                  onChange={(e) => setNewIncome({ ...newIncome, source: e.target.value })}
+                  placeholder="e.g., Salary, Freelance, Investment"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-white/60 mb-2">Amount (₹)</label>
+                <input
+                  type="number"
+                  value={newIncome.amount}
+                  onChange={(e) => setNewIncome({ ...newIncome, amount: e.target.value })}
+                  placeholder="0.00"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40"
+                />
+              </div>
+              <button
+                onClick={addIncome}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-semibold transition"
+              >
+                Add Income
               </button>
             </div>
           </div>

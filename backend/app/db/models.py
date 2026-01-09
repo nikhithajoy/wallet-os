@@ -27,8 +27,9 @@ class User(Base):
     timezone = Column(String, default="UTC")
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship
+    # Relationships
     expenses = relationship("Expense", back_populates="user", cascade="all, delete-orphan")
+    incomes = relationship("Income", back_populates="user", cascade="all, delete-orphan")
 
 
 class Expense(Base):
@@ -44,3 +45,17 @@ class Expense(Base):
 
     # Relationship
     user = relationship("User", back_populates="expenses")
+
+
+class Income(Base):
+    __tablename__ = "incomes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    source = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    date = Column(String, nullable=False)  # Store as YYYY-MM-DD string
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship
+    user = relationship("User", back_populates="incomes")

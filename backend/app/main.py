@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api import auth_router, expenses_router
+from app.api import auth_router, expenses_router, income_router, users_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -26,6 +26,8 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api")
 app.include_router(expenses_router, prefix="/api")
+app.include_router(income_router, prefix="/api")
+app.include_router(users_router, prefix="/api")
 
 
 @app.get("/health")

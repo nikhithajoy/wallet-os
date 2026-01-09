@@ -30,6 +30,16 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    currency: Optional[str] = Field(None, max_length=10)
+    timezone: Optional[str] = Field(None, max_length=50)
+
+
+class UserIncomeUpdate(BaseModel):
+    income: float = Field(..., gt=0)
+
+
 class AuthResponse(BaseModel):
     token: str
     user: UserResponse
